@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
 import { UserModel } from "../models/User.model";
 import { MailService, TokenService } from ".";
-import { UserDTO } from "../dto";
+import { ApiErrorException } from "../exceptions";
 
 const mailService = new MailService();
 const tokenService = new TokenService();
@@ -19,7 +19,9 @@ export class UserService {
 
   async register(email: string, password: string) {
     const candidate = await UserModel.findOne({ email });
-    if (candidate) throw new Error(`User with this email: ${email} already exists`);
+    if (candidate) {
+      throw ApiErrorException.BadRequest(`User with this email: ${email} already exists`);
+    }
 
     const hashPassword = await bcrypt.hash(password, 10);
     const link = uuidv4();
@@ -41,7 +43,7 @@ export class UserService {
 
   async activateLink(activationLink: string) {
     const user = await UserModel.findOne({ activationLink });
-    if (!user) throw new Error("Invalid activation link");
+    if (!user) throw ApiErrorException.BadRequest("Invalid activation link");
 
     user.isActivated = true;
     user.activationLink = null;

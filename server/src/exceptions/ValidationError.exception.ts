@@ -1,11 +1,10 @@
-import { Request, Response, NextFunction } from "express";
+export class ValidationErrorException extends Error {
+  status;
+  errors;
 
-export function ValidationErrorException(
-  error: Error,
-  request: Request,
-  response: Response,
-  next: NextFunction
-) {
-  console.error("Error 💥", error.stack);
-  response.status(500).json({ message: error.message || "Internal Server Error" });
+  constructor(status: number, message: string, errors?: string[]) {
+    super(message);
+    this.status = status;
+    this.errors = errors;
+  }
 }

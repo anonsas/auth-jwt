@@ -6,7 +6,7 @@ const userService = new UserService();
 
 const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(6).max(32),
 });
 
 const days30 = 60 * 24 * 60 * 60 * 1000;
