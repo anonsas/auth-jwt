@@ -9,7 +9,7 @@ export class ApiErrorException extends Error {
   }
 
   static UnauthorizedError() {
-    return new ApiErrorException(401, "User is unauthorized");
+    return new ApiErrorException(401, "Not authorized. Please log in");
   }
 
   static BadRequest(message: string, errors?: string[]) {

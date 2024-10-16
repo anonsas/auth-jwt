@@ -3,8 +3,9 @@ import { Types } from "mongoose";
 type ModelType = {
   _id: Types.ObjectId;
   email: string;
+  password: string;
   isActivated: boolean;
-  activationLink: string | null | undefined;
+  activationLink?: string | null | undefined;
 };
 
 export class UserDTO {

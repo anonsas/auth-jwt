@@ -3,20 +3,13 @@ import bcrypt from "bcrypt";
 import { UserModel } from "../models/User.model";
 import { MailService, TokenService } from ".";
 import { ApiErrorException } from "../exceptions";
+import { UserDTO } from "../dto";
 
 const mailService = new MailService();
 const tokenService = new TokenService();
 
 // Business logic
 export class UserService {
-  // private createUserDTO(user: any) {
-  //   return {
-  //     id: user._id,
-  //     email: user.email,
-  //     isActivated: user.isActivated,
-  //   };
-  // }
-
   async register(email: string, password: string) {
     const candidate = await UserModel.findOne({ email });
     if (candidate) {
@@ -29,18 +22,14 @@ export class UserService {
     const user = await UserModel.create({ email, password: hashPassword, activationLink: link });
     await mailService.sendActivationMail(email, `${process.env.API_URL}/activate/${link}`);
 
-    const userDTO = {
-      id: user._id,
-      email: user.email,
-      isActivated: user.isActivated,
-    };
-
+    const userDTO = new UserDTO(user);
     const { accessToken, refreshToken } = tokenService.generateTokens({ ...userDTO });
-    await tokenService.saveRefreshToken(userDTO.id, refreshToken);
 
+    await tokenService.saveRefreshToken(userDTO.id, refreshToken);
     return { accessToken, refreshToken, user: userDTO };
   }
 
+  //================================================================================
   async activateLink(activationLink: string) {
     const user = await UserModel.findOne({ activationLink });
     if (!user) throw ApiErrorException.BadRequest("Invalid activation link");
@@ -50,15 +39,27 @@ export class UserService {
     await user.save();
   }
 
+  //================================================================================
   async login(email: string, password: string) {
-    // const { email, password } = registerSchema.parse(request.body);
-    // const token = await userService.login(email, password);
-    // return response.status(200).json({ token });
+    const user = await UserModel.findOne({ email });
+    if (!user) throw ApiErrorException.BadRequest("User with this email is not found");
+
+    const isPasswordEqual = await bcrypt.compare(password, user.password);
+    if (!isPasswordEqual) throw ApiErrorException.BadRequest("Wrong password");
+
+    const userDTO = new UserDTO(user);
+    const { accessToken, refreshToken } = tokenService.generateTokens({ ...userDTO });
+
+    await tokenService.saveRefreshToken(userDTO.id, refreshToken);
+    return { accessToken, refreshToken, user: userDTO };
   }
 
+  //================================================================================
   async logout() {}
 
+  //================================================================================
   async refreshToken() {}
 
+  //================================================================================
   async getUsers() {}
 }

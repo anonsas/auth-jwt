@@ -39,8 +39,10 @@ export class UserController {
   async login(request: Request, response: Response, next: NextFunction) {
     try {
       const { email, password } = registerSchema.parse(request.body);
-      const token = await userService.login(email, password);
-      return response.status(200).json({ token });
+      const user = await userService.login(email, password);
+
+      response.cookie("refreshToken", user.refreshToken, { maxAge: days30, httpOnly: true });
+      return response.status(200).json(user);
     } catch (error) {
       next(error);
     }
