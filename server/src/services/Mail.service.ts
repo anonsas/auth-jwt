@@ -15,10 +15,10 @@ export class MailService {
     });
   }
 
-  async sendActivationMail(sendTo: string, link: string) {
+  async sendActivationMail(to: string, link: string) {
     await this.transporter.sendMail({
       from: process.env.SMTP_USER,
-      to: sendTo,
+      to: to,
       subject: `Account activation on page: ${process.env.API_URL}`,
       text: "",
       html: `<div>

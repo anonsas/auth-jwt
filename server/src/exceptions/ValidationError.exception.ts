@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 
-export function globalErrorMiddleware(
+export function ValidationErrorException(
   error: Error,
   request: Request,
   response: Response,

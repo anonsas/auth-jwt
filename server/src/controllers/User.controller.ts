@@ -19,7 +19,18 @@ export class UserController {
       const user = await userService.register(email, password);
 
       response.cookie("refreshToken", user.refreshToken, { maxAge: days30, httpOnly: true });
-      return response.status(201).json({ user });
+      return response.status(201).json(user);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async activateLink(request: Request, response: Response, next: NextFunction) {
+    try {
+      const activationLink = request.params.link;
+      await userService.activateLink(activationLink);
+
+      return response.redirect(process.env.CLIENT_URL || "");
     } catch (error) {
       next(error);
     }
@@ -38,16 +49,6 @@ export class UserController {
   async logout(request: Request, response: Response, next: NextFunction) {
     try {
       response.json("Logged out");
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async activateLink(request: Request, response: Response, next: NextFunction) {
-    try {
-      const { link } = request.params;
-      const result = await userService.activateLink(link);
-      return response.status(200).json({ message: "Account activated" });
     } catch (error) {
       next(error);
     }

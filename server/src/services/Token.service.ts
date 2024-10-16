@@ -23,7 +23,7 @@ export class TokenService {
     const tokenData = await TokenModel.findOne({ user: userId });
     if (tokenData) {
       tokenData.refreshToken = refreshToken;
-      return tokenData.save();
+      return await tokenData.save();
     }
 
     // Means user is logged-in for the first time and no tokens in the DB

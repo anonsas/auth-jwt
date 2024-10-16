@@ -9,15 +9,23 @@ const tokenService = new TokenService();
 
 // Business logic
 export class UserService {
+  // private createUserDTO(user: any) {
+  //   return {
+  //     id: user._id,
+  //     email: user.email,
+  //     isActivated: user.isActivated,
+  //   };
+  // }
+
   async register(email: string, password: string) {
     const candidate = await UserModel.findOne({ email });
     if (candidate) throw new Error(`User with this email: ${email} already exists`);
 
     const hashPassword = await bcrypt.hash(password, 10);
-    const activationLink = `${process.env.API_URL}/${uuidv4()}`;
+    const link = uuidv4();
 
-    const user = await UserModel.create({ email, password: hashPassword, activationLink });
-    await mailService.sendActivationMail(email, activationLink);
+    const user = await UserModel.create({ email, password: hashPassword, activationLink: link });
+    await mailService.sendActivationMail(email, `${process.env.API_URL}/activate/${link}`);
 
     const userDTO = {
       id: user._id,
@@ -31,6 +39,15 @@ export class UserService {
     return { accessToken, refreshToken, user: userDTO };
   }
 
+  async activateLink(activationLink: string) {
+    const user = await UserModel.findOne({ activationLink });
+    if (!user) throw new Error("Invalid activation link");
+
+    user.isActivated = true;
+    user.activationLink = null;
+    await user.save();
+  }
+
   async login(email: string, password: string) {
     // const { email, password } = registerSchema.parse(request.body);
     // const token = await userService.login(email, password);
@@ -38,8 +55,6 @@ export class UserService {
   }
 
   async logout() {}
-
-  async activateLink(link: string) {}
 
   async refreshToken() {}
 
