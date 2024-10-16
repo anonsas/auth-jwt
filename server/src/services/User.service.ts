@@ -55,7 +55,10 @@ export class UserService {
   }
 
   //================================================================================
-  async logout() {}
+  async logout(refreshToken: string) {
+    const token = await tokenService.removeRefreshToken(refreshToken);
+    return token;
+  }
 
   //================================================================================
   async refreshToken() {}

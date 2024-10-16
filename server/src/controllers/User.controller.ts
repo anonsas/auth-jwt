@@ -50,7 +50,11 @@ export class UserController {
 
   async logout(request: Request, response: Response, next: NextFunction) {
     try {
-      response.json("Logged out");
+      const { refreshToken } = request.cookies;
+      const token = await userService.logout(refreshToken);
+      response.clearCookie("refreshToken");
+
+      return response.status(200).json(token);
     } catch (error) {
       next(error);
     }
