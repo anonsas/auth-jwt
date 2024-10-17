@@ -8,31 +8,46 @@ import { UserDTO } from "../dto";
 const mailService = new MailService();
 const tokenService = new TokenService();
 
-// Business logic
 export class UserService {
-  async register(email: string, password: string) {
-    const candidate = await UserModel.findOne({ email });
-    if (candidate) {
-      throw ApiErrorException.BadRequest(`User with this email: ${email} already exists`);
+  //================================================================================
+  async register(
+    email: string,
+    password: string
+  ): Promise<{ accessToken: string; refreshToken: string; user: UserDTO }> {
+    // Check if user already exists
+    const existingUser = await UserModel.findOne({ email });
+    if (existingUser) {
+      throw ApiErrorException.BadRequest(`User with email: ${email} already exists`);
     }
 
-    const hashPassword = await bcrypt.hash(password, 10);
-    const link = uuidv4();
+    // Hash password and generate activation link
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const activationLink = uuidv4();
 
-    const user = await UserModel.create({ email, password: hashPassword, activationLink: link });
-    await mailService.sendActivationMail(email, `${process.env.API_URL}/activate/${link}`);
+    // Create new user
+    const user = await UserModel.create({ email, password: hashedPassword, activationLink });
+    if (!user) throw ApiErrorException.UnauthorizedError();
 
+    // Send activation email
+    await mailService.sendActivationMail(
+      email,
+      `${process.env.API_URL}/activate/${activationLink}`
+    );
+
+    // Generate and save tokens
     const userDTO = new UserDTO(user);
     const { accessToken, refreshToken } = tokenService.generateTokens({ ...userDTO });
-
     await tokenService.saveRefreshToken(userDTO.id, refreshToken);
+
     return { accessToken, refreshToken, user: userDTO };
   }
 
   //================================================================================
-  async activateLink(activationLink: string) {
+  async activateLink(activationLink: string): Promise<void> {
     const user = await UserModel.findOne({ activationLink });
-    if (!user) throw ApiErrorException.BadRequest("Invalid activation link");
+    if (!user) {
+      throw ApiErrorException.BadRequest("Invalid activation link");
+    }
 
     user.isActivated = true;
     user.activationLink = null;
@@ -40,29 +55,67 @@ export class UserService {
   }
 
   //================================================================================
-  async login(email: string, password: string) {
+  async login(
+    email: string,
+    password: string
+  ): Promise<{ accessToken: string; refreshToken: string; user: UserDTO }> {
+    // Find user by email
     const user = await UserModel.findOne({ email });
-    if (!user) throw ApiErrorException.BadRequest("User with this email is not found");
+    if (!user) {
+      throw ApiErrorException.BadRequest("User with this email is not found");
+    }
 
-    const isPasswordEqual = await bcrypt.compare(password, user.password);
-    if (!isPasswordEqual) throw ApiErrorException.BadRequest("Wrong password");
+    // Check if password matches
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      throw ApiErrorException.BadRequest("Incorrect password");
+    }
 
+    // Generate and return tokens
     const userDTO = new UserDTO(user);
     const { accessToken, refreshToken } = tokenService.generateTokens({ ...userDTO });
-
     await tokenService.saveRefreshToken(userDTO.id, refreshToken);
+
     return { accessToken, refreshToken, user: userDTO };
   }
 
   //================================================================================
-  async logout(refreshToken: string) {
-    const token = await tokenService.removeRefreshToken(refreshToken);
-    return token;
+  async logout(refreshToken: string): Promise<void> {
+    if (!refreshToken) {
+      throw ApiErrorException.UnauthorizedError();
+    }
+    await tokenService.removeRefreshToken(refreshToken);
   }
 
   //================================================================================
-  async refreshToken() {}
+  async refreshToken(
+    token: string
+  ): Promise<{ accessToken: string; refreshToken: string; user: UserDTO }> {
+    if (!token) {
+      throw ApiErrorException.UnauthorizedError();
+    }
+
+    // Verify the refresh token and check if it exists in the database
+    const userData = tokenService.verifyRefreshToken(token);
+    const tokenFromDB = await tokenService.findRefreshToken(token);
+
+    if (!userData || !tokenFromDB || typeof userData !== "object" || !("id" in userData)) {
+      throw ApiErrorException.UnauthorizedError();
+    }
+
+    // Fetch the user and generate new tokens
+    const user = await UserModel.findById(userData.id);
+    if (!user) throw ApiErrorException.UnauthorizedError();
+
+    const userDTO = new UserDTO(user);
+    const { accessToken, refreshToken } = tokenService.generateTokens({ ...userDTO });
+    await tokenService.saveRefreshToken(userDTO.id, refreshToken);
+
+    return { accessToken, refreshToken, user: userDTO };
+  }
 
   //================================================================================
-  async getUsers() {}
+  async getUsers() {
+    return await UserModel.find();
+  }
 }

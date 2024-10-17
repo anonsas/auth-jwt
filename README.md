@@ -12,12 +12,13 @@ After that, the token cannot be used to access protected resources.
 
 ## Why Do We Need a Refresh Token?
 
-Should the user have to log in every 15 minutes when the token expires? No, that’s where **refresh tokens** come in.
+Should the user have to log in every 15 minutes when the access token expires?  
+ No, that’s where **refresh tokens** come in.
 
 - **Access Token**: Valid for a short period (typically 15-30 minutes).  
   It's used to access the server and is usually stored in **memory** or **localStorage**.
 - **Refresh Token**: Valid for a longer period (typically 15-60 days).  
-  Its role is to issue new access tokens when the current one expires.  
+  Its role is to issue new access token when the current one expires.  
   This token is stored securely in **HTTP-only cookies** to prevent it from being accessed  
   by JavaScript (which adds protection against XSS attacks).
 
