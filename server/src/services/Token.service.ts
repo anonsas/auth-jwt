@@ -8,7 +8,7 @@ const REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_TOKEN || "";
 
 export class TokenService {
   //================================================================================
-  generateTokens(payload: UserDTO): { accessToken: string; refreshToken: string } {
+  generateTokens(payload: UserDTO) {
     const accessToken = jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
     const refreshToken = jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: "30d" });
     return { accessToken, refreshToken };
@@ -30,7 +30,7 @@ export class TokenService {
   }
 
   //================================================================================
-  verifyAccessToken(accessToken: string): UserDTO | null {
+  verifyAccessToken(accessToken: string) {
     try {
       return jwt.verify(accessToken, ACCESS_TOKEN_SECRET) as UserDTO;
     } catch {
@@ -39,7 +39,7 @@ export class TokenService {
   }
 
   //================================================================================
-  verifyRefreshToken(refreshToken: string): any | null {
+  verifyRefreshToken(refreshToken: string) {
     try {
       return jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as UserDTO;
     } catch {

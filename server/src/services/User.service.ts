@@ -10,10 +10,7 @@ const tokenService = new TokenService();
 
 export class UserService {
   //================================================================================
-  async register(
-    email: string,
-    password: string
-  ): Promise<{ accessToken: string; refreshToken: string; user: UserDTO }> {
+  async register(email: string, password: string) {
     // Check if user already exists
     const existingUser = await UserModel.findOne({ email });
     if (existingUser) {
@@ -43,7 +40,7 @@ export class UserService {
   }
 
   //================================================================================
-  async activateLink(activationLink: string): Promise<void> {
+  async activateLink(activationLink: string) {
     const user = await UserModel.findOne({ activationLink });
     if (!user) {
       throw ApiErrorException.BadRequest("Invalid activation link");
@@ -55,10 +52,7 @@ export class UserService {
   }
 
   //================================================================================
-  async login(
-    email: string,
-    password: string
-  ): Promise<{ accessToken: string; refreshToken: string; user: UserDTO }> {
+  async login(email: string, password: string) {
     // Find user by email
     const user = await UserModel.findOne({ email });
     if (!user) {
@@ -80,7 +74,7 @@ export class UserService {
   }
 
   //================================================================================
-  async logout(refreshToken: string): Promise<void> {
+  async logout(refreshToken: string) {
     if (!refreshToken) {
       throw ApiErrorException.UnauthorizedError();
     }
@@ -88,9 +82,7 @@ export class UserService {
   }
 
   //================================================================================
-  async refreshToken(
-    token: string
-  ): Promise<{ accessToken: string; refreshToken: string; user: UserDTO }> {
+  async refreshToken(token: string) {
     if (!token) {
       throw ApiErrorException.UnauthorizedError();
     }
@@ -116,6 +108,8 @@ export class UserService {
 
   //================================================================================
   async getUsers() {
-    return await UserModel.find();
+    const users = await UserModel.find();
+    const usersDTO: UserDTO[] = users.map((user) => new UserDTO(user));
+    return usersDTO;
   }
 }
