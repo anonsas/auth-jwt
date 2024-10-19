@@ -1,21 +1,16 @@
-import { SyntheticEvent, useState } from "react";
-import { AuthService } from "../../app/services/Auth.service";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
-export function RegisterPage() {
+export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const submitFormHandler = (e: SyntheticEvent) => {
-    e.preventDefault();
-    AuthService.register(email, password);
-  };
-
   return (
     <>
-      <h1 className="text-center">Register page</h1>
+      <h1 className="text-center">Login page</h1>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <form className="space-y-6" onSubmit={submitFormHandler}>
+        <form className="space-y-6" action="#" method="POST">
           <div>
             <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
               Email address
@@ -40,6 +35,14 @@ export function RegisterPage() {
               >
                 Password
               </label>
+              <div className="text-sm">
+                <Link
+                  to="/register"
+                  className="font-semibold text-indigo-600 hover:text-indigo-500"
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </div>
             <div className="mt-2">
               <input
@@ -59,7 +62,7 @@ export function RegisterPage() {
               type="submit"
               className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              Register
+              Sign in
             </button>
           </div>
         </form>

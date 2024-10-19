@@ -1,3 +1,7 @@
 export function HomePage() {
-  return <div>Home.page</div>;
+  return (
+    <>
+      <h1 className="text-center">Home page</h1>
+    </>
+  );
 }
